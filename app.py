@@ -18,6 +18,15 @@ def permits():
     if request.method == "GET":
         conn = get_db_connection()
         permits = conn.execute("SELECT * FROM permits")
+
+        if request.args.get('licensePlateNumber'):
+            permits = conn.execute("SELECT * FROM permits\
+                 WHERE licensePlateNumber = ?", (request.args.get('licensePlateNumber'), ))
+        
+        if request.args.get('ownerName'):
+            permits = conn.execute("SELECT * FROM permits\
+                 WHERE ownerName = ?",  (request.args.get('ownerName'), ))
+                
         return jsonify([ dict(permit) for permit in permits.fetchall()])
 
     if request.method == "POST":
