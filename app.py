@@ -1,17 +1,28 @@
 import json
 import sqlite3
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, render_template
 from flask_cors import CORS
 from pathlib import Path
 
 from db.init_db import init_db_exec
 from db.connection import get_db_connection
 
+class VueFlask(Flask):
+    jinja_options = Flask.jinja_options.copy()
+    jinja_options.update(dict(
+        variable_start_string='%%',
+        variable_end_string='%%',
+    ))
 
-app = Flask(__name__)
+app = VueFlask(__name__,  static_folder = "./dist/static", template_folder = "./dist")
 app.config.from_object(__name__)
 
 CORS(app, resources={r'/*': {'origins': '*'}})
+
+@app.route("/", methods=["GET"])
+def index():
+    return render_template("index.html")
+
 
 @app.route("/permits", methods=["GET", "POST"])
 def permits():
