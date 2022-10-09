@@ -1,6 +1,12 @@
 import json
+import sqlite3
 from flask import Flask, jsonify, request
 from flask_cors import CORS
+from pathlib import Path
+
+from db.init_db import init_db_exec
+from db.connection import get_db_connection
+
 
 app = Flask(__name__)
 app.config.from_object(__name__)
@@ -10,37 +16,9 @@ CORS(app, resources={r'/*': {'origins': '*'}})
 @app.route("/permits", methods=["GET", "POST"])
 def permits():
     if request.method == "GET":
-        permits = [
-            {
-                "licensePlateNumber": "M M 1",
-                "plateIssuerCountry": "DE",
-                "startDate": "2022-12-12",
-                "endDate": "2022-12-13",
-                "ownerName": "Max Mustermann"
-            },
-            {
-                "licensePlateNumber": "AA-123-AA",
-                "plateIssuerCountry": "FR",
-                "startDate": "2022-12-12",
-                "endDate": "2022-12-13",
-                "ownerName": "Jean Dupont"
-            },
-            {
-                "licensePlateNumber": "SD 12345",
-                "plateIssuerCountry": "CH",
-                "startDate": "2022-12-12",
-                "endDate": "2022-12-13",
-                "ownerName": "Erika Mustermann"
-            },
-            {
-                "licensePlateNumber": "AT 123",
-                "plateIssuerCountry": "AT",
-                "startDate": "2022-12-12",
-                "endDate": "2022-12-13",
-                "ownerName": "Krethi Musterfrau"
-            }
-        ]
-        return jsonify(permits)
+        conn = get_db_connection()
+        permits = conn.execute("SELECT * FROM permits")    
+        return jsonify(list(permits))
 
     if request.method == "POST":
         return jsonify(request.get_json())
@@ -48,4 +26,8 @@ def permits():
 
 
 if __name__ == '__main__':
+    db = Path("./db/database.db")
+    if not db.is_file():
+        init_db_exec()
+
     app.run(debug=True)
