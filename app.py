@@ -17,13 +17,26 @@ CORS(app, resources={r'/*': {'origins': '*'}})
 def permits():
     if request.method == "GET":
         conn = get_db_connection()
-        permits = conn.execute("SELECT * FROM permits")    
-        return jsonify(list(permits))
+        permits = conn.execute("SELECT * FROM permits")
+        return jsonify([ dict(permit) for permit in permits.fetchall()])
 
     if request.method == "POST":
-        return jsonify(request.get_json())
-        
-
+        req = request.get_json()
+        conn = get_db_connection()
+        conn.execute(
+            "INSERT INTO permits \
+                (licensePlateNumber, plateIssuerCountry, startDate, endDate, ownerName )\
+                    values (?, ?, ?, ?, ?)", 
+                    [
+                        req.get("licensePlateNumber"), 
+                        req.get("plateIssuerCountry"),
+                        req.get("startDate"), 
+                        req.get("endDate"), 
+                        req.get("ownerName")
+                    ]
+                    )
+        conn.commit()
+        return jsonify("ok")
 
 if __name__ == '__main__':
     db = Path("./db/database.db")
